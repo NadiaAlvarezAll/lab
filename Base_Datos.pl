@@ -52,12 +52,12 @@ jefe(yagluth).
 jefe(la_reina).
  
 % JEFE DEL BIOMA XXXXX
-jefe_DE(eikthyr,    praderas).
-jefe_DE(el_anciano, bosque_negro).
-jefe_DE(bonemass,   pantano).
-jefe_DE(moder,      montaña).
-jefe_DE(yagluth,    llanuras).
-jefe_DE(la_reina,   tierras_de_niebla).
+jefe_de(eikthyr,    praderas).
+jefe_de(el_anciano, bosque_negro).
+jefe_de(bonemass,   pantano).
+jefe_de(moder,      montaña).
+jefe_de(yagluth,    llanuras).
+jefe_de(la_reina,   tierras_de_niebla).
 
 % invoca(JEFE, OBJETO_INVOCACION, CANTIDAD)
 invoca(eikthyr,    trofeo_de_ciervo,  2).
@@ -116,7 +116,7 @@ alias(bosque,   bosque_negro).
 alias(niebla,   tierras_de_niebla).
 alias(montanas, montaña).
 
-% ----------------------------------------------------------------------------------
+% --------------------------------------------------------------------------------------------------------------------------------------------
 
 % REGLAS
 % IDEA DADA ES - "A" ES UN JEFE ANTERIOR A "B" SI EL BIOMA DE "A" APARECE ANTES QUE EL BIOMA DE "B"
@@ -127,33 +127,41 @@ jefe_previo(A, B) :-
     orden(BiomaB, NB), 
     NA < NB.
  
-% bases(Item, Bases): materiales basicos (que no se fabrican) para hacer Item.
-% si un ingrediente tambien tiene receta, se desarma too
-bases(Item, Bases) :-
-    receta(Item, _, Ingredientes),
+% BASES(ITEM, BASE) MATERIALES BASICOS (QUE NO SE FABRICAN) ITEMS
+% SI UN INGREDIENTE TIENE MAS RECETAS SE DESARMA
+% MAS SIMPLE SOLO ENCONTRAR LOS MATERIALES PARA FABRICAR LAS COSAS 
+/* EJEMPLO MAS GENERAL,,, HACHA DE BRONCE -> MADERA + BRONCE -> BRONCE = ESTAÑO Y COBRE -> MADERA + COBRE + ESTAÑO */ 
+bases(Item, Bases) :- receta(Item, _, Ingredientes),
+
+    % FINDALL ENCONTRAR TODAS LAS SOLICIONES PARA "B" QUE COMPLAN CON LAS CONDCIONES GUARDADAS EN UNA LISTA 
     findall(B, (member(X, Ingredientes), base_de(X, B)), Lista),
+
+    % ORDENA UNA LISTA Y ELIMINA DUPLICADOS
     sort(Lista, Bases).
- 
+
+% AQUI ES DE SI "X" TIENE UNA RECETA, ENTONCES "X" SE PUEDE FABRICAR Y SE TIENE QUE BUSCAR LOS MATERIALES
 base_de(X, B) :- receta(X, _, _), !, bases(X, Bs), member(B, Bs). % X se fabrica: desarmarlo
 base_de(X, X).  % X ya es basico
 
+% ---------------------------------------------------------------------------------------------------------------------------------------
 
-
-% --- CHAT BOT ¿Preguntas tengo entendido? ---
+% CHAT BOT ¿PREGUNTAWS TENGO ENTENDIDO YO? 
 chatbot :-
+
     % MENSAJITO DEAAA muy literal el escribir ln sjjsjs
     writeln('ValheimBot: Hola vikingo, pregunta algo de Valheim, sin tildes, porfa. Escribe "ayuda" o "salir"'),
     bucle.
  
 % Lee una linea,,, la pasa a minusculas y responde,,, Se repite hasta "salir"
 bucle :-
+
     write('> '),
     read_line_to_string(user_input, Texto),
     (   Texto == end_of_file
     ->  true
     ;   downcase_atom(Texto, Linea),
         (   contiene(Linea, salir)
-        ->  writeln('ValheimBot: xao vikingo, vuelve pronto')
+        ->  writeln('ValheimBot: Xao vikingo, vuelve pronto')
         ;   responder(Linea),
             bucle
         )
@@ -231,11 +239,14 @@ responder(L) :-
 responder(_) :-
     writeln('ValheimBot: No te entendi. Escribe "ayuda" para ver ejemplos.').
  
+% M ES CONSIDERADO UN MATERIAL SI APARECE EN UNA RECETA, COMO RECURSO O COMO BOTIN DE UN JEFE
+% ES DECIR, SI SE PUEDE PREGUNTAR "DONDE CONSIGO M" 
 % material(M): cosas por las que se puede preguntar "donde consigo..."
 material(M) :- receta(M, _, _).
 material(M) :- recurso_en(M, _).
 material(M) :- botin(_, M).
  
+% DECIRLE AL USUARIO DE DONDE OBTIENE CADA MATERIAL, SI ES QUE SE PUEDE OBTENER DE ALGUN LADO
 decir_origen(M) :-
     (   recurso_en(M, Bioma)
     ->  format('ValheimBot: ~w se encuentra en ~w.~n', [M, Bioma])
