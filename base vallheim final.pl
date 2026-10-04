@@ -110,12 +110,21 @@ receta(espada_de_hierro,  forja,            [madera, hierro]).
 
 % APODOS PA CACHAR QUE SE HABLA DE LO MISMO, PORQUE EL USUARIO NO VA A ESCRIBIR EXACTAMENTE COMO ESTA EN LA BASE DE DATOS DAAAA
 % aqui le agrego comillas porque si no no lo busca y el espacio
+
 alias('el anciano',  el_anciano).
 alias('elder',    el_anciano).
 alias('la reina',    la_reina).
 alias('bosque',   bosque_negro).
 alias('niebla',   tierras_de_niebla).
 alias('montanas', montana).
+alias('pico de asta',       pico_de_asta).
+alias('hacha de bronce',    hacha_de_bronce).
+alias('espada de hierro',   espada_de_hierro).
+alias('hacha de pedernal',  hacha_de_pedernal).
+alias('asta dura',          asta_dura).
+alias('chatarra de hierro', chatarra_hierro).
+alias('mena de plata',      mena_de_plata).
+
 
 % para que funcionen los alias
 menciona_jefe(Texto, JefeReal) :-
@@ -128,6 +137,18 @@ menciona_bioma(Texto, BiomaReal) :-
     bioma(BiomaReal),
     ( contiene(Texto, BiomaReal)
     ; alias(Alias, BiomaReal), contiene(Texto, Alias)
+    ), !.
+
+menciona_receta(Texto, Item) :-
+    receta(Item, _, _),
+    ( contiene(Texto, Item)
+    ; alias(Alias, Item), contiene(Texto, Alias)
+    ), !.
+
+menciona_material(Texto, M) :-
+    material(M),
+    ( contiene(Texto, M)
+    ; alias(Alias, M), contiene(Texto, Alias)
     ), !.
 
 % REGLAS
@@ -214,29 +235,31 @@ responder(L) :-
     menciona_bioma(L, B), !,
     jefe_de(J, B),
     format('ValheimBot: El jefe de ~w es ~w.~n', [B, J]).
- 
+
 % "que enemigos hay en las llanuras"
 responder(L) :-
     contiene(L, enemigo),
     menciona_bioma(L, B), !,
     findall(E, enemigo_en(E, B), Lista),
     format('ValheimBot: En ~w hay: ~w.~n', [B, Lista]).
- 
+
+% "que necesito para fabricar hacha de bronce"
 % "que necesito para fabricar hacha de bronce"
 responder(L) :-
     ( contiene(L, fabric) ; contiene(L, necesit) ; contiene(L, receta) ),
-    receta(Item, Estacion, Ingredientes), contiene(L, Item), !,
+    menciona_receta(L, Item), !,
+    receta(Item, Estacion, Ingredientes),
     bases(Item, Bases),
     format('ValheimBot: ~w se hace en ~w con ~w.~n', [Item, Estacion, Ingredientes]),
     format('ValheimBot: Materiales basicos: ~w.~n', [Bases]).
- 
+
 % "donde consigo cobre"
 responder(L) :-
     ( contiene(L, donde) ; contiene(L, consig) ),
-    material(M), contiene(L, M), !,
+    menciona_material(L, M), !,
     (   receta(M, _, _) -> bases(M, Bases) ; Bases = [M] ),
     forall(member(B, Bases), decir_origen(B)).
- 
+
 responder(L) :-
     contiene(L, ayuda), !,
     writeln('Ejemplos'),
