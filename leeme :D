@@ -1,0 +1,4 @@
+este bot es un chatbot que podra responder tus dudas acerca del mundo de vallheim y 
+te aportara en la creacion de recetas ubicacion de jefes, etc :D .      
+Requisitos (SWI-Prolog).  
+para correr el bot (swipl -s "archivo.pl" -g chatbot).  
